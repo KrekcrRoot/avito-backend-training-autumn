@@ -1,0 +1,44 @@
+@startuml
+title C4 Level 3 — Avito Kitchen
+
+actor "Пользователь" as User
+
+rectangle "Avito Kitchen" {
+
+    rectangle "HTTP Handlers" as Handlers
+
+    rectangle "UserService" as UserService
+    rectangle "RestaurantService" as RestaurantService
+    rectangle "OrderService" as OrderService
+
+    rectangle "UserRepository" as UserRepo
+    rectangle "RestaurantRepository" as RestaurantRepo
+    rectangle "OrderRepository" as OrderRepo
+
+    rectangle "Restaurant HTTP Client" as RestaurantClient
+}
+
+database "Kitchen DB\nPostgreSQL" as DB
+rectangle "Restaurant Service" as Restaurant
+
+User --> Handlers : HTTP
+
+Handlers --> UserService
+Handlers --> RestaurantService
+Handlers --> OrderService
+
+UserService --> UserRepo
+RestaurantService --> RestaurantRepo
+OrderService --> OrderRepo
+
+RestaurantService --> RestaurantClient
+OrderService --> RestaurantClient
+
+UserRepo --> DB
+RestaurantRepo --> DB
+OrderRepo --> DB
+
+RestaurantClient --> Restaurant : REST API
+Restaurant --> Handlers : status callback
+
+@enduml

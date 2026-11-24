@@ -1,0 +1,46 @@
+@startuml
+
+title CJM: Создание и получение заказа пользователем
+
+actor "Пользователь" as User
+participant "Avito Kitchen" as Kitchen
+participant "Restaurant Service" as Restaurant
+
+== Выбор ресторана ==
+
+User -> Kitchen: GET /restaurants
+Kitchen --> User: Список ресторанов
+
+== Просмотр меню ==
+
+User -> Kitchen: GET /restaurants/{id}/products
+Kitchen -> Restaurant: GET /api/v1/products
+Restaurant --> Kitchen: Список продуктов
+Kitchen --> User: Меню ресторана
+
+== Создание заказа ==
+
+User -> Kitchen: POST /orders
+Kitchen -> Kitchen: Создать заказ в своей БД
+Kitchen -> Restaurant: POST /api/v1/orders
+Restaurant --> Kitchen: restaurant_order_id
+Kitchen -> Kitchen: Сохранить restaurant_order_id
+Kitchen --> User: Заказ создан
+
+== Обработка заказа ==
+
+Restaurant -> Kitchen: POST /integration/orders/status\nstatus = accepted
+Kitchen --> Restaurant: 200 OK
+
+Restaurant -> Kitchen: POST /integration/orders/status\nstatus = cooking
+Kitchen --> Restaurant: 200 OK
+
+Restaurant -> Kitchen: POST /integration/orders/status\nstatus = ready
+Kitchen --> Restaurant: 200 OK
+
+== Просмотр заказа ==
+
+User -> Kitchen: GET /orders/{id}
+Kitchen --> User: Детали заказа и текущий статус
+
+@enduml

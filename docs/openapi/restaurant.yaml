@@ -1,0 +1,133 @@
+openapi: 3.0.3
+
+info:
+  title: Restaurant Service API
+  description: API сервиса ресторана
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+
+  /_info:
+    get:
+      summary: Проверка работоспособности сервиса
+      responses:
+        '200':
+          description: Сервис работает
+
+  /api/v1/products:
+    get:
+      summary: Получить меню ресторана
+      description: Возвращает список товаров и их текущую доступность.
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: Список товаров
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: Пицца Маргарита
+                  price: 500
+                  created_at: "2026-09-08T18:26:21.98695Z"
+                  updated_at: "2026-09-08T18:26:21.98695Z"
+                  is_available: true
+                - id: 2
+                  name: Кола
+                  price: 150
+                  created_at: "2026-09-08T18:26:21.98695Z"
+                  updated_at: "2026-09-08T18:26:21.98695Z"
+                  is_available: false
+
+        '401':
+          description: Неверный API-ключ
+
+  /api/v1/orders:
+    post:
+      summary: Создать заказ
+      description: |
+        Создаёт заказ ресторана на основании заказа,
+        полученного от Avito Kitchen.
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              kitchen_order_id: 10
+              items:
+                - product_id: 1
+                  quantity: 2
+                - product_id: 2
+                  quantity: 1
+
+      responses:
+        '201':
+          description: Заказ успешно создан
+          content:
+            application/json:
+              example:
+                id: 15
+                kitchen_order_id: 10
+                status: new
+                created_at: "2026-09-07T23:04:48+03:00"
+                updated_at: "2026-09-07T17:29:45.73957+03:00"
+
+        '400':
+          description: Некорректные данные заказа
+
+        '401':
+          description: Неверный API-ключ
+
+  /api/v1/orders/{id}:
+    get:
+      summary: Получить заказ
+      security:
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор заказа в системе ресторана
+          schema:
+            type: integer
+            format: int64
+            example: 15
+
+      responses:
+        '200':
+          description: Информация о заказе
+          content:
+            application/json:
+              example:
+                id: 15
+                kitchen_order_id: 10
+                status: cooking
+                created_at: "2026-09-07T23:04:48+03:00"
+                updated_at: "2026-09-07T17:29:45.73957+03:00"
+                items:
+                  - product_id: 1
+                    quantity: 2
+                    price: 500
+                  - product_id: 2
+                    quantity: 1
+                    price: 150
+
+        '401':
+          description: Неверный API-ключ
+
+        '404':
+          description: Заказ не найден
+
+components:
+
+  securitySchemes:
+
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key

@@ -1,0 +1,38 @@
+@startuml
+
+title CJM: Обработка заказа рестораном
+
+participant "Avito Kitchen" as Kitchen
+participant "Restaurant Service" as Restaurant
+database "Restaurant DB" as DB
+
+Kitchen -> Restaurant: POST /api/v1/orders
+Restaurant -> DB: Создать заказ
+DB --> Restaurant: Order (new)
+Restaurant --> Kitchen: restaurant_order_id
+
+== Обработка заказа ==
+
+Restaurant -> DB: Изменить статус: accepted
+DB --> Restaurant: Order (accepted)
+
+Restaurant -> Kitchen: POST /integration/orders/status\nstatus = accepted
+Kitchen --> Restaurant: 200 OK
+
+... 5 секунд ...
+
+Restaurant -> DB: Изменить статус: cooking
+DB --> Restaurant: Order (cooking)
+
+Restaurant -> Kitchen: POST /integration/orders/status\nstatus = cooking
+Kitchen --> Restaurant: 200 OK
+
+... 5 секунд ...
+
+Restaurant -> DB: Изменить статус: ready
+DB --> Restaurant: Order (ready)
+
+Restaurant -> Kitchen: POST /integration/orders/status\nstatus = ready
+Kitchen --> Restaurant: 200 OK
+
+@enduml

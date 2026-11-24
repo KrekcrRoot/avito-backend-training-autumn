@@ -1,0 +1,21 @@
+@startuml
+title C4 Level 2 — Avito Kitchen
+
+actor "Пользователь" as User
+
+rectangle "Avito Kitchen\nGo REST API" as Kitchen
+database "Kitchen DB\nPostgreSQL" as KitchenDB
+
+rectangle "Restaurant Service\nGo REST API" as Restaurant
+database "Restaurant DB\nPostgreSQL" as RestaurantDB
+
+User --> Kitchen : HTTP / REST
+
+Kitchen --> KitchenDB : SQL
+
+Kitchen --> Restaurant : REST API
+Restaurant --> Kitchen : Status callback
+
+Restaurant --> RestaurantDB : SQL
+
+@enduml

@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kitchen-migrate:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./avito_kitchen_service/sql/migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://postgres:postgres@postgres:5432/avito_kitchen?sslmode=disable"
+      - "up"
+
+  restaurant-migrate:
+    image: migrate/migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./restaurant_service/sql/migrations:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://postgres:postgres@postgres:5432/restaurant?sslmode=disable"
+      - "up"
+
+  kitchen:
+    build:
+      context: ./avito_kitchen_service
+    depends_on:
+      kitchen-migrate:
+        condition: service_completed_successfully
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "3001"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "avito_kitchen"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      JWT_SECRET: "some-secret"
+    ports:
+      - "3001:3001"
+
+  restaurant:
+    build:
+      context: ./restaurant_service
+    depends_on:
+      restaurant-migrate:
+        condition: service_completed_successfully
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "3000"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "restaurant"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      API_KEY: "secret"
+      KITCHEN_URL: "http://kitchen:3001"
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
